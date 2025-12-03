@@ -5,7 +5,10 @@ import (
 	"time"
 
 	"github.com/mrxacker/user_service/configs"
+	"github.com/mrxacker/user_service/internal/handlers/http"
+	"github.com/mrxacker/user_service/internal/repository/in_memory"
 	"github.com/mrxacker/user_service/internal/server"
+	"github.com/mrxacker/user_service/internal/services"
 )
 
 const (
@@ -20,7 +23,11 @@ func Run(ctx context.Context) error {
 		return err
 	}
 
-	err = initServer(ctx, config)
+	userRepo := in_memory.NewInMemoryUserRepo()
+	userService := services.NewUserService(userRepo)
+	userHandler := http.NewUserHandler(userService)
+
+	err = initServer(ctx, config, userHandler)
 	if err != nil {
 		return err
 	}
@@ -28,9 +35,9 @@ func Run(ctx context.Context) error {
 	return nil
 }
 
-func initServer(ctx context.Context, config *configs.Config) error {
+func initServer(ctx context.Context, config *configs.Config, userHandler *http.UserHandler) error {
 
-	srv, err := setupServer(*config)
+	srv, err := setupServer(config, userHandler)
 	if err != nil {
 		return err
 	}
@@ -43,8 +50,8 @@ func initServer(ctx context.Context, config *configs.Config) error {
 	return nil
 }
 
-func setupServer(config configs.Config) (*server.Server, error) {
-	srv, err := server.NewServer(&config)
+func setupServer(config *configs.Config, userHandler *http.UserHandler) (*server.Server, error) {
+	srv, err := server.NewServer(config, userHandler)
 	if err != nil {
 		return nil, err
 	}

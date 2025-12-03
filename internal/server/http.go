@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/mrxacker/user_service/configs"
+	httpHandler "github.com/mrxacker/user_service/internal/handlers/http"
 )
 
 const (
@@ -20,13 +21,24 @@ type Server struct {
 	httpServer *http.Server
 }
 
-func NewServer(cfg *configs.Config) (*Server, error) {
+func NewServer(cfg *configs.Config, h *httpHandler.UserHandler) (*Server, error) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintln(w, "OK")
 		if err != nil {
 			return
+		}
+	})
+
+	mux.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			h.GetUser(w, r)
+		case http.MethodPost:
+			h.CreateUser(w, r)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
 
