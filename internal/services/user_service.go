@@ -5,6 +5,7 @@ import "github.com/mrxacker/user_service/internal/models"
 type UserRepository interface {
 	CreateUser(user models.User) (models.User, error)
 	GetUserByID(id int) (models.User, error)
+	GetUsers() ([]models.User, error)
 }
 
 type UserService struct {
@@ -25,4 +26,8 @@ func (s *UserService) RegisterUser(name, email string) (models.User, error) {
 
 func (s *UserService) GetUser(id int) (models.User, error) {
 	return s.repo.GetUserByID(id)
+}
+
+func (s *UserService) GetUsers() ([]models.User, error) {
+	return s.repo.GetUsers()
 }

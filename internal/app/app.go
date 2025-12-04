@@ -25,9 +25,9 @@ func Run(ctx context.Context) error {
 
 	userRepo := in_memory.NewInMemoryUserRepo()
 	userService := services.NewUserService(userRepo)
-	userHandler := http.NewUserHandler(userService)
+	handlers := httpHandler.NewHandler(userService)
 
-	err = initServer(ctx, config, userHandler)
+	err = initServer(ctx, config, handlers)
 	if err != nil {
 		return err
 	}
@@ -35,9 +35,9 @@ func Run(ctx context.Context) error {
 	return nil
 }
 
-func initServer(ctx context.Context, config *configs.Config, userHandler *http.UserHandler) error {
+func initServer(ctx context.Context, config *configs.Config, handlers *httpHandler.Handlers) error {
 
-	srv, err := setupServer(config, userHandler)
+	srv, err := setupServer(config, handlers)
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func initServer(ctx context.Context, config *configs.Config, userHandler *http.U
 	return nil
 }
 
-func setupServer(config *configs.Config, userHandler *http.UserHandler) (*server.Server, error) {
+func setupServer(config *configs.Config, userHandler *httpHandler.Handlers) (*server.Server, error) {
 	srv, err := server.NewServer(config, userHandler)
 	if err != nil {
 		return nil, err

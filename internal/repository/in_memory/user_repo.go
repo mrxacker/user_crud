@@ -33,3 +33,7 @@ func (repo *InMemoryUserRepo) GetUserByID(id int) (models.User, error) {
 	}
 	return models.User{}, errors.New("user not found")
 }
+
+func (repo *InMemoryUserRepo) GetUsers() ([]models.User, error) {
+	return repo.users, nil
+}
