@@ -53,7 +53,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, created, http.StatusCreated)
 }
 
-func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) GetUsers(w http.ResponseWriter, _ *http.Request) {
 	users, err := h.userService.GetUsers()
 	if err != nil {
 		jsonError(w, "users not found", http.StatusNotFound)
