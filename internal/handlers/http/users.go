@@ -12,8 +12,10 @@ import (
 
 type UserService interface {
 	RegisterUser(name, email string) (models.User, error)
-	GetUser(id int) (models.User, error)
+	GetUser(id int) (*models.User, error)
 	GetUsers() ([]models.User, error)
+	UpdateUser(id int, name, email string) (*models.User, error)
+	DeleteUser(id int) error
 }
 
 type UserHandler struct {
@@ -30,8 +32,8 @@ func (h *UserHandler) Routes() chi.Router {
 	r.Post("/", h.CreateUser)
 	r.Route("/{id}", func(r chi.Router) {
 		r.Get("/", h.GetUserByID)
-		r.Put("/", h.GetUserByID)
-		r.Delete("/", h.GetUserByID)
+		r.Put("/", h.UpdateUser)
+		r.Delete("/", h.DeleteUser)
 	})
 	return r
 }
@@ -53,6 +55,47 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, created, http.StatusCreated)
 }
 
+func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	var user dto.CreateUserRequest
+
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		jsonError(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		jsonError(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	updated, err := h.userService.UpdateUser(id, user.Name, user.Email)
+	if err != nil {
+		jsonError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonResponse(w, updated, http.StatusOK)
+}
+
+func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		jsonError(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	err = h.userService.DeleteUser(id)
+	if err != nil {
+		jsonError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonResponse(w, nil, http.StatusNoContent)
+}
+
 func (h *UserHandler) GetUsers(w http.ResponseWriter, _ *http.Request) {
 	users, err := h.userService.GetUsers()
 	if err != nil {
@@ -60,6 +103,9 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
+	if users == nil {
+		users = []models.User{}
+	}
 	jsonResponse(w, users, http.StatusOK)
 }
 

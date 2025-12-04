@@ -3,9 +3,11 @@ package services
 import "github.com/mrxacker/user_service/internal/models"
 
 type UserRepository interface {
-	CreateUser(user models.User) (models.User, error)
-	GetUserByID(id int) (models.User, error)
-	GetUsers() ([]models.User, error)
+	Create(user models.User) (models.User, error)
+	GetByID(id int) (*models.User, error)
+	GetAll() ([]models.User, error)
+	Update(user models.User) (*models.User, error)
+	Delete(id int) error
 }
 
 type UserService struct {
@@ -21,13 +23,29 @@ func (s *UserService) RegisterUser(name, email string) (models.User, error) {
 		Name:  name,
 		Email: email,
 	}
-	return s.repo.CreateUser(user)
+	return s.repo.Create(user)
 }
 
-func (s *UserService) GetUser(id int) (models.User, error) {
-	return s.repo.GetUserByID(id)
+func (s *UserService) GetUser(id int) (*models.User, error) {
+	return s.repo.GetByID(id)
 }
 
 func (s *UserService) GetUsers() ([]models.User, error) {
-	return s.repo.GetUsers()
+	return s.repo.GetAll()
+}
+
+func (s *UserService) UpdateUser(id int, name, email string) (*models.User, error) {
+	user, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Name = name
+	user.Email = email
+
+	return s.repo.Update(*user)
+}
+
+func (s *UserService) DeleteUser(id int) error {
+	return s.repo.Delete(id)
 }
